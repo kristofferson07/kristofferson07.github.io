@@ -12,7 +12,7 @@ tags: [documents]     # TAG names should always be lowercase
     - GitHub public + GitHub pages -> lokal synchronisiert, kein extra Backup nötig
 2. etwas sensitiv, z.B. Notizen, Rechnungen
     - Google Drive, Google Keep -> sollte entweder offline verfügbar sein, oder regelmäßiges Backup nötig
-    - GitHub private repo -> lokal synchronisiert, kein extra Backup nötig
+    - lokales Git repo -> synchronisiert mit GitHub private repo
 3. sensitiv
     - lokaler Ordner (entschlüsselt oder auf Veracrypt-Partition) -> synchronisiert mit verschlüsseltem Google drive Ordner via rclone oder gocryptfs (alternativ Cryptomator, Icloud with advanced data protection, Obisidian remotely-save plugin)
 
