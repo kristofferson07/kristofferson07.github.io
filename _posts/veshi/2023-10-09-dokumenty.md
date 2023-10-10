@@ -8,10 +8,13 @@ tags: [documents]     # TAG names should always be lowercase
 
 ### Мои документы
 
-- 3 вида:
-  - keine sensitiv Info -> GitHub (praktisch, da kein extra Backup nötig)
-  - wenig sensitiv -> Google Drive, Google Keep (sollte entweder offline verfügbar sein, oder regelmäßiges Backup nötig)
-  - sensitive Info -> Google drive (encrypted folder, synced from local folder via rclone or gocryptfs)
+1. keine sensitive Info, z.B. Tutorials
+    - GitHub public + GitHub pages -> lokal synchronisiert, kein extra Backup nötig
+2. etwas sensitiv, z.B. Notizen, Rechnungen
+    - Google Drive, Google Keep -> sollte entweder offline verfügbar sein, oder regelmäßiges Backup nötig
+    - GitHub private repo -> lokal synchronisiert, kein extra Backup nötig
+3. sensitiv
+    - Google drive -> verschlüsselt, synchronisiert mit lokalem Ordner via rclone oder gocryptfs (alternativ Cryptomator, Icloud with advanced data protection, Obisidian remotely-save plugin, Veracrypt)
 
 ### Rechnungen
 
