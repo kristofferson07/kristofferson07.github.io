@@ -14,7 +14,7 @@ tags: [documents]     # TAG names should always be lowercase
     - Google Drive, Google Keep -> sollte entweder offline verfügbar sein, oder regelmäßiges Backup nötig
     - GitHub private repo -> lokal synchronisiert, kein extra Backup nötig
 3. sensitiv
-    - Google drive -> verschlüsselt, synchronisiert mit lokalem Ordner via rclone oder gocryptfs (alternativ Cryptomator, Icloud with advanced data protection, Obisidian remotely-save plugin, Veracrypt)
+    - lokaler Ordner (entschlüsselt oder auf Veracrypt-Partition) -> synchronisiert mit verschlüsseltem Google drive Ordner via rclone oder gocryptfs (alternativ Cryptomator, Icloud with advanced data protection, Obisidian remotely-save plugin)
 
 ### Rechnungen
 
