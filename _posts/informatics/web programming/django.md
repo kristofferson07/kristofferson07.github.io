@@ -1,3 +1,10 @@
+---
+title: Django notes
+date: 2023-12-28 23:00:00 +0200
+categories: [Informatics]
+tags: [python, web development, django]     # TAG names should always be lowercase
+---
+
 # Django
 
 - "Harvard CS50’s Web Programming with Python and JavaScript – Full University Course" by freeCodeCamp, [YouTube](https://www.youtube.com/watch?v=vzGllw18DkA)
