@@ -1,0 +1,422 @@
+# Django
+
+- "Harvard CS50’s Web Programming with Python and JavaScript – Full University Course" by freeCodeCamp, [YouTube](https://www.youtube.com/watch?v=vzGllw18DkA)
+
+## Intro
+
+- Full stack framework, but seems to work best for backend
+- Competitors: Flask, FastAPI (paired with React for frontend)
+- Reddit: "Use Django for backend if complex relational data structures required, but always add a REST- or GraphQL API, and build the frontend with a modern frontend framework like Vue/Nuxt", or React/Next
+  - another suggestion: Django + [htmux](https://htmx.org/)
+  - [django-ninja](https://github.com/vitalik/django-ninja) adds features like type hints
+- GitHub pages are for static sites, but Django generates pages dynamically -> not possible
+  - possible with [pythonanywhere.com](https://help.pythonanywhere.com/pages/FollowingTheDjangoTutorial)
+
+## Start Django project
+
+- Install Django via pip
+- Start Django project: `django-admin startproject <project-name>` (e.g. `lecture3`)
+  - this creates a bunch of files in project directory, e.g. `settings.py`, `urls.py` etc.
+- Run web server: `python manage.py runserver`
+- Every Django project consists of one or more Django applications (services)
+  - create app in project: `python manage.py startapp <app-name>` (e.g. `hello`)
+  - this creates a bunch of files in app directory, e.g. `views.py`, `apps.py`, `models.py`
+  - App needs to be installed in project: in `settings.py`, add `hello` to list `INSTALLED_APPS`
+
+## Returning HTTP response (html)
+
+- To make the app do/display sth, add to `views.py`:
+
+    ```python
+    # hello/views.py
+    from django.http import HttpResponse
+
+    def index(request):
+        return HttpResponse("Hello, world!")
+    ```
+
+- To indicate which URL should trigger the response: create `urls.py` file in `hello` directory:
+
+    ```python
+    # hello/urls.py
+    from django.urls import path
+    from . import views
+
+    urlpatterns = [path("", views.index, name="index")]  # path/url -> rendered view
+    # means: for default route, run the `index` function, i.e. one of the views
+    ```
+
+- Now, in project-wide `urls.py` file (all project URLs that can be accessed):
+  - `/admin` -> built-in admin application, provided by Django
+  - `/hello` (must be added to file) -> our application
+
+    ```python
+    # lecture3/urls.py
+    from django.urls import include, path
+
+    urlpatterns = [
+        path("admin/", admin.site.urls),
+        path("hello/", include("hello.urls"))  # if user goes to URL /hello, look inside `hello.urls` file to decide what to do
+        ]
+    ```
+
+- Now, <http://127.0.0.1:8000/hello> -> "Hello, world!"
+  - Django identified app based on route; then, `hello` app displayed the view
+- We can create more views, and parameterize:
+
+    ```python
+    # hello/views.py
+    def greet(request, name):
+        return HttpResponse(f"Hello, {name.capitalize()}")
+
+    ```
+
+    ```python
+    # hello/urls.py
+    urlpatterns = [
+        path("", views.index, name="index"),
+        path("<str:name>", views.greet, name="greet"),
+    ]
+    ```
+
+- Explanation: `path` function is a way to define a URL pattern
+  - route `str:name` matches non-empty string and captures it as parameter `name`
+  - `views.greet` function takes HttpRequest object and captured parameters as arguments, returns HttpResponse object
+  - name (here `greet`) = unique identifier for this URL pattern
+
+## Rendering html template
+
+    ```python
+    # hello/views.py
+    def index(request):
+        return render(request, "hello/index.html")
+    ```
+
+- In `hello` directory, create subfolders `templates/hello/` and file `index.html`
+  - this file will be displayed on default route
+- Django allows template-based rendering of HTML ([Django docs](https://docs.djangoproject.com/en/5.0/topics/templates/))
+  - Template contains variables -> replaced with values when template is evaluated
+
+    ```python
+    # hello/views.py
+    def greet(request, name):
+        # third argument to `render` = "context", required data for template
+        return render(request, "hello/greet.html", {
+            "name": name.capitalize()
+        })
+    ```
+
+    ```html
+    <!-- templates/hello/greet.html -->
+    ...
+        <body>
+            <h1>Huhu {{ name }}</h1>
+        </body>
+    ...
+    ```
+
+- Separation of components: `urls.py` -> routes, `views.py` -> logic what to show/render and what data is required, and templates -> page contents
+
+### Create app: newyear
+
+- Goal: Create app like `isitchristmas.com`, but for new year
+- `python manage.py startapp newyear`
+- Add `newyear` to `INSTALLED_APP` in `settings.py`
+- Add path `newyear/` to project `urls.py`
+- Create `urls.py` for newyear app
+- Add to `views.py`:
+
+  ```python
+  # newyear/views.py
+  import datetime
+
+  def index(request):
+      now = datetime.datetime.now()
+      return render(request, "newyear/index.html", {
+          "newyear": now.month == 1 and now.day == 1
+      })
+  ```
+
+- Create file `templates/newyear/index.html`
+  - Django templates can include logic:
+
+  ```html
+  <!-- templates/newyear/index.html -->
+  ...
+  <body>
+      <!-- conditional logic -->
+      {% if newyear %}
+        <h1>YES</h1>
+      {% else %}
+        <h1>NO</h1>
+      {% endif %}
+  </body>
+  ```
+
+- Inspect page source: you see `<h1>YES</h1>` or `<h1>YES</h1>`, but not both –> page was pre-processed on the server ("backend")
+- Create app folder `static/newyear` for static files, like `styles.css` and js files
+  - Load in html via:
+
+  ```html
+  <!-- templates/newyear/index.html -->
+  {% load static %}  <!-- on top of page -->
+
+  <head>
+    <link href="{% static 'newyear/styles.css' %}" rel="stylesheet">
+    <!-- django replaces `static bla/file.css` with path to file -->
+  </head>
+  ```
+
+### Create app: tasks
+
+- Goal: Create app "tasks" with a todo list
+- `python manage.py startapp tasks`
+- Add `tasks` to `INSTALLED_APP` in `settings.py`
+- Add path `tasks/` to project `urls.py`
+- Create `urls.py` for tasks app
+- Add to `views.py`:
+
+  ```python
+  # tasks/views.py
+  tasks = ["foo", "bar", "baz"] 
+  
+  def index(request):
+      return render(request, "tasks/index.html", {
+        "tasks": tasks  # context dict with key "tasks" and value list of tasks
+      })
+  ```
+
+- Create file `templates/tasks/index.html`
+
+  ```html
+  <!-- templates/tasks/index.html -->
+  ...
+  <body>
+      <ul>
+          <!-- django template for loop -->
+          {% for task in tasks %}
+              <li>{{ task }}</li>
+          {% endfor %}
+      </ul>
+  </body>
+  ```
+
+- Let's add the possibility to add tasks:
+
+  ```python
+  # tasks/views.py
+  def add (request):
+      return render(request, "tasks/add.html")
+  ```
+
+  ```python
+  # tasks/urls.py
+  urlpatterns = [
+      path("", views.index, name="index"),
+      path("add", views.add, name="add")
+  ]
+  ```
+
+  ```html
+  <!-- templates/tasks/add.html -->
+  <body>
+      <h1>Add task</h1>
+      <form>
+          <input type="text" name="task">
+          <input type="submit">
+      </form>
+  </body>
+  ```
+
+- Note that `add.html` is very similar to `index.html` -> bad design
+  - Instead: use template inheritance to write boilerplate code only once
+- Add file `templates/tasks/layout.html` and use it in other html files:
+
+  ```html
+  <!-- templates/tasks/layout.html -->
+  <!DOCTYPE html>
+  <html lang="en">
+    <head>
+      ...
+    </head>
+    <body>
+      {% block body %} <!-- "body" is the name we are giving our block -->
+      <!-- this block might change between html pages -->
+      {% endblock %}
+    </body>
+  </html>
+  ```
+
+  ```html
+  <!-- templates/tasks/add.html -->
+  {% extends "tasks/layout.html" %}
+
+  {% block body %}
+    <h1>Add task</h1>
+    <form>
+        <input type="text" name="task">
+        <input type="submit">
+    </form>
+    <!-- link to url named "index" (defined in urls.py) -->
+    <a href="{% url 'tasks:index' %}">View tasks</a>
+    <!-- syntax 'tasks:index' prevents URL name collisions between apps -->
+  {% endblock %}
+  ```
+
+  ```html
+  <!-- templates/tasks/index.html -->
+  {% extends "tasks/layout.html" %}
+
+  {% block body %}
+    <h1>Tasks</h1>
+    <ul>
+        <!-- django template for loop -->
+        {% for task in tasks %}
+            <li>{{ task }}</li>
+        {% empty %}  <!-- we can add an "empty" condition like this -->
+            <li>No tasks.</li>
+        {% endfor %}
+    </ul>
+    <!-- link to url named "add" (defined in urls.py) -->
+    <a href="{% url 'tasks:add' %}">Add a new task</a>
+  {% endblock %} 
+  ```
+
+  ```python
+  # tasks/urls.py
+  app_name = "tasks"  # required for syntax `tasks:index` in {% url %} blocks
+  urlpatterns = [
+      path("", views.index, name="index"),
+      path("add", views.add, name="add")
+  ]
+  ```
+
+- Let's make our form actually submit something:
+
+  ```html
+  <!-- templates/tasks/add.html -->
+  {% extends "tasks/layout.html" %}
+
+  {% block body %}
+    <h1>Add task</h1>
+    <form action="{% url 'tasks:add' %}" method="post">
+    <!-- post request (form data sent in request body, not in URL query string)
+    recommended for data that changes app state, e.g. creating/updating tasks -->
+        {% csrf_token %}
+        <!-- csrf token required for security of post requests;
+        Django inserts hidden input field with the token value -->
+        <input type="text" name="task">
+        <input type="submit">
+    </form>
+    <!-- link to url named "index" (defined in urls.py) -->
+    <a href="{% url 'tasks:index' %}">View tasks</a>
+    <!-- syntax 'tasks:index' prevents URL name collisions between apps -->
+  {% endblock %}
+  ```
+
+- `post` requests require CSRF validation
+  - provided via Django middleware addon (added by default in `settings.py`)
+- We used pure html for form, but it can also be templated:
+
+  ```py
+  # tasks/views.py
+  from django import forms
+
+  class NewTaskForm(forms.Form):
+      task = forms.CharField(label="New Task")
+      # Advantage: form can be modified in Python, not html,
+      # simplifying additional options and future changes,
+      # e.g. adding additional fields:
+      priority = forms.IntegerField(label="Priority", min_value=1, max_value=10)
+      # Checking for min/max values will be performed as client-side validation,
+      # but we should also do server-side validation in the `add` function.
+
+  def add (request):
+      return render(request, "tasks/add.html", {
+        "form": NewTaskForm()
+      })
+  ```
+
+  ```html
+  <!-- templates/tasks/add.html -->
+  {% extends "tasks/layout.html" %}
+
+  {% block body %}
+    <h1>Add task</h1>
+    <form action="{% url 'tasks:add' %}" method="post">
+        {% csrf_token %}
+        {{ form }} <!-- insert form from context dict passed to `add` view -->
+        <input type="submit">
+    </form>
+    <a href="{% url 'tasks:index' %}">View tasks</a>
+  {% endblock %}
+  ```
+
+- Form has client-side validation ([Mozilla docs](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/min))
+  - But we also want server-side validation (in case client-side validation is disabled by user or outdated)
+  - `add` function is called in 2 ways, via GET request and via POST request:
+
+  ```python
+  # tasks/views.py
+  def add (request):
+      if request.method == "POST":
+          form = NewTaskForm(request.POST)
+          # We translate the html form into a Python object!
+          # print(f"{form.cleaned_data=}")
+          # print(f"{form.data=}")
+          # OK, let's do server-side form validation.
+          if form.is_valid():  # working with Python objects sure is nice...
+              task = form.cleaned_data["task"]  # take form field "task"
+              tasks.append(task)
+              # print(f"{tasks=}")
+          else:
+              return render(request, "tasks/add.html", {
+                  "form": form  # send back old form to indicate problem
+              })
+
+      return render(request, "tasks/add.html", {
+        "form": NewTaskForm()
+      })
+  ```
+
+- This is a common paradigm to deal with forms: GET them first, evaluate POST results later
+- After successful form submission, we can redirect user:
+
+  ```py
+  # tasks/views.py
+  from django.http import HttpResponseRedirect
+  from django.urls import reverse
+
+  def add (request):
+      if request.method == "POST":
+          form = NewTaskForm(request.POST)
+          if form.is_valid():
+              tasks.append(form.cleaned_data["task"])
+              return HttpResponseRedirect(reverse("tasks:index"))
+          else:
+              return render(request, "tasks/add.html", {"form": form})
+
+      return render(request, "tasks/add.html", {"form": NewTaskForm()})
+  ```
+
+- Problem: we are using a global variable for tasks, all site visitors share it
+  - Use "sessions" (determined by cookies) for user-specific data
+  - A session is a user-specific dictionary:
+
+```py
+# tasks/views.py
+def index(request):
+    if "tasks" not in request.session:
+        request.session["tasks"] = []
+    
+    return render(request, "tasks/index.html", {"tasks": request.session["tasks"]})
+```
+
+- Also, in `add` function, change `tasks.append(task)` to `request.session["tasks"] += [task]`
+- By default, Django stores session data in tables, so we need to create a table first:
+
+  ```sh
+  python manage.py migrate  # creates default tables in Django's db
+  ```
+
+- Django is very powerful for storing and interacting with data in databases
